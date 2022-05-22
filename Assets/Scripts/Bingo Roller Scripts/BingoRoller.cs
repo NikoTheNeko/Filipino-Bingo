@@ -6,6 +6,11 @@ using UnityEngine.UI;
 public class BingoRoller : MonoBehaviour{
     
     #region Public Variables
+
+    [Header("Bingo Rolller Attributes")]
+    public int MinTimeToCall = 3;
+    public int MaxTimeToCall = 7;
+    
     public Text BingoCallText;
 
 
@@ -83,7 +88,7 @@ public class BingoRoller : MonoBehaviour{
             Timer -= Time.deltaTime;
             BingoCallText.text = GetBingoLetter(CurrentBall) + CurrentBall.ToString();
         } else {
-            int NewTime = Random.Range(3, 7);
+            int NewTime = Random.Range(MinTimeToCall, MaxTimeToCall);
             Timer = NewTime;
             CurrentBall = CallBall();
         }
@@ -100,7 +105,7 @@ public class BingoRoller : MonoBehaviour{
         //Rolls a Ball
         int BallNumber = Random.Range(1,75);
 
-        if(BallsCalled != 75){
+        if(BallsCalled < 74){
             //If the ball has been called (Value of 0) then keep finding one
             if(UncalledBingoBalls[BallNumber] == 0){
                 while(UncalledBingoBalls[BallNumber] == 0){

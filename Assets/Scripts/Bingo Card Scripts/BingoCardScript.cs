@@ -51,15 +51,15 @@ public class BingoCardScript : MonoBehaviour{
         //Button Number is the number to traverse the button array
         int ButtonNumber = 0;
         //Traverses the X Axis (Columns the ones that go BINGO)
-        for(int i = 0; i < BingoNumbers.GetLength(1); i++){
+        for(int Col = 0; Col < BingoNumbers.GetLength(1); Col++){
             //Traverses the Y Axis (Rows, the ones that don't have letters)
-            for(int j = 0; j < BingoNumbers.GetLength(0); j++){
+            for(int Row = 0; Row < BingoNumbers.GetLength(0); Row++){
                 Button GrabButton = BingoButtons[ButtonNumber];
                 //Checking for a specific case here,
                 //Center of the BingoCard is a free space, marked as 0
-                if(i == 2 && j == 2){
+                if(Col == 2 && Row == 2){
                     //Replace later with a set function or something
-                    BingoNumbers[i,j] = 0;
+                    BingoNumbers[Col, Row] = 0;
                     GrabButton.GetComponentInChildren<Text>().text = "Free Space!";
                     ButtonNumber++;
                     continue;
@@ -68,22 +68,28 @@ public class BingoCardScript : MonoBehaviour{
 
                 //Creates the letter modifer, this is so you can
                 //Offset shit by 15 depending on the letter
-                int LetterModifer = i * 15;
+                int LetterModifer = Col * 15;
                 //Creates a new number 1 [inclusive] to 15 [also inclusive]
                 //Then adds the letter modifer
                 int NewNumber = Random.Range(1,15) + LetterModifer;
+                //Checks if the number exists in the bingo card
                 for(int n = 0; n < BingoNumbers.GetLength(0); n++){
-                    if(n == j)
+                    //If it doesn't continue the loop to check
+                    if(n == Row)
                         continue;
 
-                    if(NewNumber == BingoNumbers[i, n])
+                    //If it does generate a new number
+                    while(NewNumber == BingoNumbers[Col, n])
                         NewNumber = Random.Range(1,15) + LetterModifer;
                 }
-                BingoNumbers[i,j] = NewNumber;
-                
 
+                //Sets the number to the bingo spot
+                BingoNumbers[Col, Row] = NewNumber;
+                
+                //Sets the text to the number
                 GrabButton.GetComponentInChildren<Text>().text = NewNumber.ToString();
                 
+                //Increments the button number to move onto the next
                 ButtonNumber++;
                 //Debug.Log("Number of [" + i + ", " + j + "] is " + NewNumber);
             }
@@ -110,7 +116,7 @@ public class BingoCardScript : MonoBehaviour{
             return;
 
         //Flips the spot from false <=> true, one of them.
-        BingoMarkedSpots[Row,Column] = !BingoMarkedSpots[Row,Column];
+        BingoMarkedSpots[Column, Row] = !BingoMarkedSpots[Column, Row];
         Debug.Log("Bingo Spot: " + Row + " " + Column + " is now marked: " + BingoMarkedSpots[Row,Column]);
     }
 
@@ -118,7 +124,7 @@ public class BingoCardScript : MonoBehaviour{
         Check Spot on Card just returns if that spot is trueee or false
     **/
     public bool CheckSpotOnCard(int Row, int Column){
-        return BingoMarkedSpots[Row,Column];
+        return BingoMarkedSpots[Column, Row];
     }
 
     #endregion
@@ -133,12 +139,12 @@ public class BingoCardScript : MonoBehaviour{
         for(int Row = 0; Row < BingoMarkedSpots.GetLength(1); Row++){
             for(int Col = 0; Col < BingoMarkedSpots.GetLength(0); Col++){
                 //If it's not marked move onto the next.
-                if(BingoMarkedSpots[Row, Col] == false)
+                if(BingoMarkedSpots[Col, Row] == false)
                     continue;
 
-                if(!BingoCallerRoller.CheckIfBallWasCalled(BingoNumbers[Row, Col])){
-                    BingoMarkedSpots[Row,Col] = false;
-                    Debug.Log(BingoNumbers[Row,Col] + " in " + "Row: " + Row + " Col: " + Col + " was not called");
+                if(!BingoCallerRoller.CheckIfBallWasCalled(BingoNumbers[Col, Row])){
+                    BingoMarkedSpots[Col, Row] = false;
+                    Debug.Log(BingoNumbers[Col, Row] + " in " + " Row: " + Row + " Col: " + Col + " was not called");
                 }
             }
         }
@@ -147,7 +153,7 @@ public class BingoCardScript : MonoBehaviour{
 
     public void CheckForBingo(){
         VerifyCard();
-        if(CheckRows() || CheckCols() || CheckDiagonals()){
+        if(CheckAllRows() || CheckAllCols() || CheckDiagonals()){
             Debug.Log("BINGO!!!");
             //return true;
         }
@@ -156,67 +162,92 @@ public class BingoCardScript : MonoBehaviour{
 
     }
 
-    private bool CheckRows(){
-        //Check for rows
-        //This checks if there's anything in the first column is marked
-        //If there is, then look through the entire row
-        for(int Row = 0; Row < BingoMarkedSpots.GetLength(1); Row++){
-            //If that row's 1st spot (column 1 in normal people talk)
-            //Enter a loop
-            if(BingoMarkedSpots[Row, 0] == true){
-                //If the goes through the rest of the rows
-                for(int Col = 0; Col < BingoMarkedSpots.GetLength(0); Col++){
-                    //If the next spot is marked false, break out of the loop.
-                    if(BingoMarkedSpots[Row, Col] == false){
-                        Debug.Log("Row: " + Row + " Col: " + Col + "It no good :(");
-                        break;
-                    }
-                    
-                    //If not, if it's the end of the loop, it is a bingo.
-                    if(Col == 4){
-                        return true;
-                        Debug.Log("Row: " + Row + " Col: " + Col + "It good :)");
-                    }
-
-                    //If it's not just continue the loop
-                    continue;
-                }
-            }
+    /**
+        This goes through the entire bingo sheet to see if any row is true
+    **/
+    private bool CheckAllRows(){
+        //Goes through all the rows, if any row is marked at all, then mark as true
+        for(int i = 0; i < BingoMarkedSpots.GetLength(1); i++){
+            if(CheckRow(i))
+                return true;
         }
-        //If you've went through the entire thing, there probably isnt anything
+
+        //if none are true, then just return false.
         return false;
     }
 
-    private bool CheckCols(){
-        //Check for Cols
-        //This checks if there's anything in the first column is marked
-        //If there is, then look through the entire Col
-        for(int Col = 0; Col < BingoMarkedSpots.GetLength(1); Col++){
-            //If that Col's 1st spot (column 1 in normal people talk)
-            //Enter a loop
-            if(BingoMarkedSpots[0, Col] == true){
-                //If the goes through the rest of the Cols
-                for(int Row = 0; Row < BingoMarkedSpots.GetLength(0); Row++){
-                    //If the next spot is marked false, break out of the loop.
-                    if(BingoMarkedSpots[Row, Col] == false){
-                        Debug.Log("Row: " + Row + " Col: " + Col + "It no good :(");
-                        break;
-                    }
-                    
-                    //If not, if it's the end of the loop, it is a bingo.
-                    if(Row == 4){
-                        Debug.Log("Row: " + Row + " Col: " + Col + "It no good :(");
-                        return true;
-                    }
+    //CheckRows Start Function
+    private bool CheckRow(int Row){
+        Debug.Log("Checking Column: " + 0 + " and Row: " + Row + " For the Check Row Function");
+        //If the row is marked as true, then go and check the rest
+        if(BingoMarkedSpots[0, Row] == true)
+            CheckRow(1, Row); 
 
-                    //If it's not just continue the loop
-                    continue;
-                }
-            }
-        }
-        //If you've went through the entire thing, there probably isnt anything
         return false;
     }
+
+    /**
+        Checks rows helper function
+        This goes in and checks each row and will go through to see if things are good.
+    **/
+    private bool CheckRow(int Row, int Col){
+        Debug.Log("Checking Column: " + Col + " and Row: " + Row + " For the Check Row Function");
+        //If the is the last COLUMN in a ROW is true, then return true.
+        if(BingoMarkedSpots[Col, Row] == true && Col == 4)
+            return true;
+
+        //If not, if the current row is true, access recursively
+        if(BingoMarkedSpots[Col, Row] == true)
+            //Checks for the next column in the row
+            CheckRow(Row, Col++);
+
+        //If they're not true, just return false.
+        return false;
+    }
+
+    /**
+        This goes through the entire bingo sheet to see if any row is true
+    **/
+    private bool CheckAllCols(){
+        //Goes through all the Cols, if any Col is marked at all, then mark as true
+        for(int i = 0; i < BingoMarkedSpots.GetLength(1); i++){
+            if(CheckCol(i))
+                return true;
+        }
+
+        //if none are true, then just return false.
+        return false;
+    }
+
+    //CheckCols Start Function
+    private bool CheckCol(int Col){
+        Debug.Log("Checking Column: " + Col + " and Row: " + 0 + " For the Check Column Function");
+        //If the Col is marked as true, then go and check the rest
+        if(BingoMarkedSpots[Col, 0] == true)
+            CheckCol(Col, 1); 
+
+        return false;
+    }
+
+    /**
+        Checks Cols helper function
+        This goes in and checks each Col and will go through to see if things are good.
+    **/
+    private bool CheckCol(int Col, int Row){
+        Debug.Log("Checking Column: " + Col + " and Row: " + Row + " For the Check Column Function");
+        //If the is the last COLUMN in a Col is true, then return true.
+        if(BingoMarkedSpots[Col, Row] == true && Row == 4)
+            return true;
+
+        //If not, if the current Col is true, access recursively
+        if(BingoMarkedSpots[Col, Row] == true)
+            //Checks for the next column in the Col
+            CheckCol(Row++, Col);
+
+        //If they're not true, just return false.
+        return false;
+    }
+
 
     private bool CheckDiagonals(){
         //Checks from top left to bottom right

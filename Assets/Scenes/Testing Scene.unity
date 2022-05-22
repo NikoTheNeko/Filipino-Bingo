@@ -774,6 +774,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f9cacfa6ca5e8649a440d9e642dd80b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  MinTimeToCall: 3
+  MaxTimeToCall: 7
   BingoCallText: {fileID: 1288174942}
 --- !u!1001 &8231190232167742738
 PrefabInstance:
